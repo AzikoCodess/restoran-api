@@ -12,7 +12,7 @@ const authMiddleware = (req, res, next) => {
         req.user = decoded;
         next();
     } catch (error) {
-        return res.status(401).json({ message: "Token noto'g'ri!" });
+        return res.status(401).json({ error: "Token noto'g'ri!" });
     }
 }
 

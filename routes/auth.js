@@ -1,8 +1,9 @@
 const express = require("express");
 const router = express.Router();
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const formatDate = require("../utils/formatDate");
 
 router.post("/register", async (req, res) => {
     try {
@@ -10,7 +11,15 @@ router.post("/register", async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10)
         const newUser = new User({ name, username, email, password: hashedPassword })
         await newUser.save()
-        res.status(201).json({ message: "Muvaffaqiyatli ro'yxatdan o'tdingiz!" })
+        const formattedUser = {
+            id: newUser._id,
+            name: newUser.name,
+            username: newUser.username,
+            email: newUser.email,
+            role: newUser.role,
+            qoshilgan_vaqt: formatDate(newUser.createdAt)
+        }
+        res.status(201).json({ formattedUser, message: "Muvaffaqiyatli ro'yxatdan o'tdingiz!" })
     } catch (error) {
         res.status(500).json({ message: error.message })
     }
@@ -20,10 +29,10 @@ router.post("/login", async (req, res) => {
     try {
         const { login, password } = req.body
         const user = await User.findOne({
-            $or: {
-                username: login,
-                email: login
-            }
+            $or: [
+                { username: login },
+                { email: login }
+            ]
         })
 
         if (!user) {
@@ -39,6 +48,8 @@ router.post("/login", async (req, res) => {
         res.status(200).json({ token, message: "Muvaffaqiyatli kirdingiz!" })
 
     } catch (error) {
-        res.status(500).json({ message: error.message })
+        res.status(500).json({ error: error.message })
     }
 })
+
+module.exports = router
