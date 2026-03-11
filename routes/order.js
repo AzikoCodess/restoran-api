@@ -6,6 +6,38 @@ const express = require("express"),
     formatDate = require("../utils/formatDate")
 
 
+/**
+ * @swagger
+ * /order:
+ *   post:
+ *     summary: Buyurtma berish
+ *     tags: [Order]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               items:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     menuItem:
+ *                       type: string
+ *                     quantity:
+ *                       type: number
+ *               tableNumber:
+ *                 type: number
+ *     responses:
+ *       201:
+ *         description: Buyurtma qabul qilindi!
+ *       400:
+ *         description: Xato
+ */
 router.post("/", authMiddleware, async (req, res) => {
     try {
         const { items, tableNumber } = req.body
@@ -42,6 +74,20 @@ router.post("/", authMiddleware, async (req, res) => {
     }
 })
 
+/**
+ * @swagger
+ * /order:
+ *   get:
+ *     summary: Barcha buyurtmalarni olish (faqat admin)
+ *     tags: [Order]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Buyurtmalar ro'yxati
+ *       403:
+ *         description: Ruxsat yo'q!
+ */
 router.get("/", authMiddleware, async (req, res) => {
     try {
         if (req.user.role !== "admin") {
@@ -65,6 +111,18 @@ router.get("/", authMiddleware, async (req, res) => {
     }
 })
 
+/**
+ * @swagger
+ * /order/my:
+ *   get:
+ *     summary: O'z buyurtmalarini olish
+ *     tags: [Order]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Buyurtmalar ro'yxati
+ */
 router.get("/my", authMiddleware, async (req, res) => {
     try {
         const orders = await Order.find({ user: req.user.id })
@@ -75,6 +133,36 @@ router.get("/my", authMiddleware, async (req, res) => {
     }
 })
 
+/**
+ * @swagger
+ * /order/{id}/status:
+ *   put:
+ *     summary: Buyurtma holatini yangilash (faqat admin)
+ *     tags: [Order]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [pending, preparing, ready, delivered]
+ *     responses:
+ *       200:
+ *         description: Holat yangilandi!
+ *       403:
+ *         description: Ruxsat yo'q!
+ */
 router.put("/:id/status", authMiddleware, async (req, res) => {
     try {
         if (req.user.role !== "admin") {
